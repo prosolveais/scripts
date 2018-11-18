@@ -103,7 +103,7 @@ write_files:
       make judgehost && make install-judgehost
       make docs && make install-docs
       /opt/domjudge/domserver/bin/dj_setup_database genpass
-      /opt/domjudge/domserver/bin/dj_setup_database -u root -p T2mG)fnkwa7yDw{jw&FN*&4a bare-install
+      /opt/domjudge/domserver/bin/dj_setup_database -u root -p "T2mG)fnkwa7yDw{jw&FN*&4a" bare-install
       /opt/domjudge/judgehost/bin/dj_make_chroot -i gcc,g++,python,python3,default-jdk -y
     path: /root/install-domJudge.sh
   - content: |
@@ -119,7 +119,7 @@ write_files:
     path: /etc/systemd/system/judgedaemon@.service
 
 runcmd:
-  - [ mysqladmin, -u, root, password, T2mG)fnkwa7yDw{jw&FN*&4a ]
+  - [ mysqladmin, -u, root, password, "T2mG)fnkwa7yDw{jw&FN*&4a" ]
   - [ bash, /root/install-domJudge.sh ]
   - [ sed, -i, 's/\/domjudge//', /opt/domjudge/judgehost/etc/restapi.secret ]
   - [ phpenmod, json ]
