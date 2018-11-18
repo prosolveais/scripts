@@ -1,0 +1,139 @@
+#cloud-config
+users:
+  - name: domjudge
+    passwd: 6T;b\f!g&7Xp:VcHnf6tiNsf
+    shell: /usr/bin/bash
+    sudo:
+      - "ALL=(root) NOPASSWD: /opt/domjudge/judgehost/bin/runguard *"
+      - "ALL=(root) NOPASSWD: /bin/cp -pR /dev/null ../dev/null"
+      - "ALL=(root) NOPASSWD: /bin/chown -R domjudge\\: /opt/domjudge/judgehost/judgings/*"
+      - "ALL=(root) NOPASSWD: /bin/mount -n --bind /proc proc"
+      - "ALL=(root) NOPASSWD: /bin/mount --bind /chroot/domjudge/*"
+      - "ALL=(root) NOPASSWD: /bin/mount -o remount\\,ro\\,bind /opt/domjudge/judgehost/judgings/*"
+      - "ALL=(root) NOPASSWD: /bin/umount /opt/domjudge/judgehost/judgings/*"
+      - "ALL=(root) NOPASSWD: /bin/umount /*/proc"
+      - "ALL=(root) NOPASSWD: /bin/cp -pR /dev/random dev"
+      - "ALL=(root) NOPASSWD: /bin/cp -pR /dev/urandom dev"
+  - name: domjudge-run
+    homedir: /nonexistent
+    shell: /bin/false
+    no_create_home: true
+  - name: domjudge-run-1
+    homedir: /nonexistent
+    shell: /bin/false
+    no_create_home: true
+  - name: domjudge-run-2
+    homedir: /nonexistent
+    shell: /bin/false
+    no_create_home: true
+  - name: domjudge-run-3
+    homedir: /nonexistent
+    shell: /bin/false
+    no_create_home: true
+
+packages:
+  - gcc
+  - g++
+  - make
+  - zip
+  - unzip
+  - mariadb-server
+  - apache2
+  - php
+  - php-cli
+  - libapache2-mod-php
+  - php-zip
+  - php-gd
+  - php-curl
+  - php-mysql
+  - php-json
+  - php-xml
+  - php-mbstring
+  - acl
+  - bsdmainutils
+  - ntp
+  - phpmyadmin
+  - python-pygments
+  - libcgroup-dev
+  - linuxdoc-tools
+  - linuxdoc-tools-text
+  - groff
+  - texlive-latex-recommended
+  - texlive-latex-extra
+  - texlive-fonts-recommended
+  - texlive-fonts-extra
+  - certbot
+
+package_update: true
+package_upgrade: true
+
+timezone: Asia/Kuala_Lumpur
+
+ntp:
+  enabled: true
+
+write_files:
+  - content: |
+      <VirtualHost *:80>
+        ServerName _default_
+        DocumentRoot /opt/domjudge/domserver/webapp/web
+      </VirtualHost>
+
+      <Directory /opt/domjudge/domserver/webapp/web/bundles>
+        RewriteEngine Off
+      </Directory>
+
+      <Directory /opt/domjudge/domserver/webapp/web>
+        Require all granted
+        Options -MultiViews
+        RewriteEngine On
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteRule ^(.*)$ app.php [QSA,L]
+        RewriteRule .svn/ - [F]
+        RewriteRule .git/ - [F]
+        RewriteRule .gitignore$ - [F]
+        RewriteRule Makefile$ - [F]
+      </Directory>
+    path: /etc/apache2/conf-available/domjudge.conf
+  - content: |
+      curl -SL https://www.domjudge.org/releases/domjudge-6.0.2.tar.gz | tar -xz
+      cd domjudge-*
+      ./configure --with-baseurl=http://localhost/ --disable-submitclient --with-domjudge-user=domjudge
+      make domserver && make install-domserver
+      make judgehost && make install-judgehost
+      make docs && make install-docs
+      /opt/domjudge/domserver/bin/dj_setup_database genpass
+      /opt/domjudge/domserver/bin/dj_setup_database -u root -p T2mG)fnkwa7yDw{jw&FN*&4a bare-install
+      /opt/domjudge/judgehost/bin/dj_make_chroot -i gcc,g++,python,python3,default-jdk -y
+    path: /root/install-domJudge.sh
+  - content: |
+      [Unit]
+      Description=domJudge's judgedaemon %I
+      Require=apache2.service
+      After=apache2.service
+      
+      [Service]
+      ExecStart=/opt/domjudge/judgehost/bin/judgedaemon -n %i
+      Restart=always
+      RestartSec=5s
+    path: /etc/systemd/system/judgedaemon@.service
+
+runcmd:
+  - [ mysqladmin, -u, root, password, T2mG)fnkwa7yDw{jw&FN*&4a ]
+  - [ bash, /root/install-domJudge.sh ]
+  - [ sed, -i, 's/\/domjudge//', /opt/domjudge/judgehost/etc/restapi.secret ]
+  - [ phpenmod, json ]
+  - [ a2enmod, rewrite ]
+  - [ a2enmod, ssl ]
+  - [ a2enconf, domjudge ]
+  - [ systemctl, reload, apache2 ]
+  - [ mkdir, -p, /sys/fs/cgroup/cpuset/domjudge ]
+  - [ mkdir, -p, /sys/fs/cgroup/memory/domjudge ]
+  - [ systemctl, stop, apache2 ]
+  - [ systemctl, start, apache2 ]
+  - [ systemctl, enable, judgedaemon@1.service ]
+  - [ systemctl, enable, judgedaemon@2.service ]
+  - [ systemctl, enable, judgedaemon@3.service ]
+  - [ systemctl, start, judgedaemon@1.service ]
+  - [ systemctl, start, judgedaemon@2.service ]
+  - [ systemctl, start, judgedaemon@3.service ]
