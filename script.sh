@@ -26,10 +26,8 @@ ip6tables -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 iptables -A OUTPUT -p tcp -d prosolve.ml -m multiport --dport 80,443 -j ACCEPT
 ip6tables -A OUTPUT -p tcp -d prosolve.ml -m multiport --dport 80,443 -j ACCEPT
 
-# 5: drop everything
-iptables -P INPUT DROP
-ip6tables -P INPUT DROP
-iptables -P FORWARD DROP
-ip6tables -P FORWARD DROP
-iptables -P OUTPUT DROP
-ip6tables -P OUTPUT DROP
+# 5: reject everything
+iptables -A INPUT -j REJECT
+ip6tables -A INPUT -j REJECT
+iptables -A OUTPUT -j REJECT
+ip6tables -A OUTPUT -j REJECT
