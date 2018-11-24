@@ -26,9 +26,11 @@ ip6tables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 iptables -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 ip6tables -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
-# 5: allow connection to prosolve.ml
+# 5: allow connection to prosolve.ml & prosolve2018.ml
 iptables -A OUTPUT -p tcp -d prosolve.ml -m multiport --dport 80,443 -j ACCEPT
 ip6tables -A OUTPUT -p tcp -d prosolve.ml -m multiport --dport 80,443 -j ACCEPT
+iptables -A OUTPUT -p tcp -d prosolve2018.ml -m multiport --dport 80,443 -j ACCEPT
+ip6tables -A OUTPUT -p tcp -d prosolve2018.ml -m multiport --dport 80,443 -j ACCEPT
 
 # 6: reject everything
 iptables -A INPUT -j REJECT
